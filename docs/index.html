@@ -472,6 +472,14 @@
 
 .rsvp .btn.hecho{animation:none!important;background:rgba(255,255,255,.08);color:#f4deaa;border:1px solid rgba(244,222,170,.55);box-shadow:none;cursor:default;transform:none}
 .rsvp-otra{display:block;margin:16px auto 0;color:#cfe0f0;font:500 1rem var(--sans);text-decoration:underline}
+
+.bajar{position:relative;display:flex;flex-direction:column;align-items:center;gap:10px;margin:26px auto 0;padding:6px 14px;background:none;border:0;color:#f4deaa;cursor:pointer;font:500 1.05rem var(--sans);letter-spacing:.04em;text-shadow:0 2px 10px rgba(0,0,0,.6);opacity:0;animation:fade 1s ease 2.6s forwards;transition:opacity .4s}
+.bajar i{width:50px;height:50px;border-radius:50%;border:1.5px solid rgba(244,222,170,.85);background:rgba(10,22,40,.5);display:grid;place-items:center;animation:rebote 1.5s ease-in-out infinite,anillo 1.5s ease-out infinite}
+.bajar i::before{content:"";width:13px;height:13px;border-right:3px solid #f4deaa;border-bottom:3px solid #f4deaa;transform:translateY(-3px) rotate(45deg)}
+@keyframes rebote{0%,100%{transform:translateY(0)}50%{transform:translateY(12px)}}
+@keyframes anillo{0%{box-shadow:0 0 0 0 rgba(244,222,170,.55)}80%,100%{box-shadow:0 0 0 16px rgba(244,222,170,0)}}
+.bajar.oculto{opacity:0!important;pointer-events:none}
+@media (max-width:760px){.bajar{font-size:1.15rem}}
 </style>
 <style>
 *{box-sizing:border-box}
@@ -791,7 +799,7 @@ function heroInner(v) {
   <h1 class="names"><span class="nm">${C.novia}</span><span class="amp">&amp;</span><span class="nm">${C.novio}</span></h1>
   <p class="sub">nos casamos</p>
   <p class="when-s">${dia} ${num} de ${mes} de ${anio}</p>
-  <div class="scroll"></div>`;
+  <button class="bajar" type="button" aria-label="Desliza hacia abajo para ver más"><i aria-hidden="true"></i></button>`;
 }
 const storyHTML = () => `
   <section class="story">
@@ -1097,7 +1105,7 @@ function mountD9(g) {
     <div class="d1-intro env9" id="env9">
       <div class="env" id="envE">
         <div class="env-back"></div>
-        ${g ? `<div class="env-card"><small>Invitación personal para</small><b class="gn">${g.saludo}</b></div>` : `<div class="env-card"><small>Estás invitado a nuestra boda</small><b>${C.novia} &amp; ${C.novio}</b></div>`}
+        ${g ? `<div class="env-card"><small>Invitación para</small><b class="gn">${g.saludo}</b></div>` : `<div class="env-card"><small>Estás invitado a nuestra boda</small><b>${C.novia} &amp; ${C.novio}</b></div>`}
         <div class="env-front"></div><div class="env-flap"></div>
         <button class="seal" id="seal9" aria-label="Abrir la invitación">${mono()}</button>
         <svg class="env-fl" viewBox="0 0 440 282" aria-hidden="true">${floralSVG()}</svg>
@@ -1397,6 +1405,15 @@ document.addEventListener("click", e => {
   try { localStorage.setItem("nb_rsvp_" + CODIGO, "1"); } catch (err) {}
   setTimeout(marcarRsvp, 600);
 });
+
+/* ---- flecha "Desliza para ver más": baja a los datos y se oculta al deslizar ---- */
+document.addEventListener("click", e => {
+  const b = e.target.closest && e.target.closest(".bajar");
+  if (!b) return;
+  const destino = document.querySelector(".d9 .body");
+  if (destino) destino.scrollIntoView({ behavior: "smooth", block: "start" });
+});
+window.addEventListener("scroll", () => { const b = document.querySelector(".bajar"); if (b) b.classList.toggle("oculto", scrollY > 80); }, { passive: true });
 async function bootProd() {
   document.title = "Invitación";
   const code = (new URLSearchParams(location.search).get("i") || "").trim();
