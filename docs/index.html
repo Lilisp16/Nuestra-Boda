@@ -469,6 +469,9 @@
 .pin:focus{border-color:#f4deaa}
 .pinerr{min-height:1.5em;font:400 1.1rem var(--sans)!important;color:#ffb4b4!important;margin:10px 0 0!important}
 .prod-msg .cbtn{min-height:48px;padding:12px 30px;font-size:17px}
+
+.rsvp .btn.hecho{animation:none!important;background:rgba(255,255,255,.08);color:#f4deaa;border:1px solid rgba(244,222,170,.55);box-shadow:none;cursor:default;transform:none}
+.rsvp-otra{display:block;margin:16px auto 0;color:#cfe0f0;font:500 1rem var(--sans);text-decoration:underline}
 </style>
 <style>
 *{box-sizing:border-box}
@@ -1340,6 +1343,7 @@ async function iniciar(j) {
     if (au && Bgm.el) { Bgm.el.src = au; Bgm.el.load(); }
   } catch (e) {}
   mountD9({ saludo: esc(j.saludo), personas: +j.personas === 2 ? 2 : 1, msg: j.msg ? String(j.msg) : "" });
+  marcarRsvp();
 }
 function pedirPin(f, code, intento) {
   const N = f.n || 4;
@@ -1375,9 +1379,28 @@ async function abrirConClave(f, kb64) {
     return JSON.parse(new TextDecoder().decode(pt));
   } catch (e) { return null; }
 }
+
+/* ---- botón "Confirmar asistencia": después del primer toque queda "✓ Ya confirmaste" en ese celular ---- */
+let CODIGO = "";
+function marcarRsvp() {
+  let ok = false; try { ok = !!localStorage.getItem("nb_rsvp_" + CODIGO); } catch (e) {}
+  const b = document.querySelector(".rsvp a.btn");
+  if (!ok || !b || b.dataset.hecho) return;
+  const href = b.getAttribute("href");
+  b.dataset.hecho = "1"; b.textContent = "✓ Ya confirmaste"; b.classList.add("hecho"); b.removeAttribute("href"); b.setAttribute("aria-disabled", "true");
+  const otra = document.createElement("a"); otra.href = href; otra.target = "_blank"; otra.rel = "noopener"; otra.className = "rsvp-otra"; otra.textContent = "¿Necesitas escribirnos de nuevo?";
+  b.insertAdjacentElement("afterend", otra);
+}
+document.addEventListener("click", e => {
+  const b = e.target.closest && e.target.closest(".rsvp a.btn");
+  if (!b || b.dataset.hecho) return;
+  try { localStorage.setItem("nb_rsvp_" + CODIGO, "1"); } catch (err) {}
+  setTimeout(marcarRsvp, 600);
+});
 async function bootProd() {
   document.title = "Invitación";
   const code = (new URLSearchParams(location.search).get("i") || "").trim();
+  CODIGO = code;
   if (!code) { mountGate(); return; }                     /* sin enlace personal: sobre sellado */
   if (!(window.crypto && crypto.subtle)) { prodMsg("<p>Abre este enlace en Chrome o Safari para ver tu invitación.</p>"); return; }
   prodMsg("<p>Abriendo tu invitación…</p>");
